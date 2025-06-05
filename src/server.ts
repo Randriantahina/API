@@ -4,6 +4,8 @@ import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { prisma } from './config/db';
 import dotenv from 'dotenv';
+import session from 'express-session';
+import authRoutes from './routes/auth.routes';
 dotenv.config();
 
 const app = express();
@@ -14,6 +16,15 @@ const io = new SocketIOServer(server, {
   },
 });
 
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET as string,
+    resave: false,
+    saveUninitialized: true,
+  })
+);
+app.use(express.json());
+
 //Database
 prisma
   .$connect()
@@ -23,8 +34,18 @@ prisma
     process.exit(1);
   });
 
-app.get('/', (req: Request, res: Response) => {
-  res.send('Salut');
+// app.get('/', (req: Request, res: Response) => {
+//   res.send('Salut');
+// });
+app.use('/auth', authRoutes);
+
+// Home route
+app.get('/', (req, res) => {
+  if ((req.session as any).user) {
+    res.json({ message: 'User logged in', user: (req.session as any).user });
+  } else {
+    res.json({ message: 'User not logged in' });
+  }
 });
 
 // Au signal d’arrêt, on ferme proprement Prisma
