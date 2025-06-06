@@ -17,8 +17,10 @@ console.log('GOOGLE_REDIRECT_URI:', process.env.GOOGLE_REDIRECT_URI);
 router.get('/google', (req, res) => {
   const url = client.generateAuthUrl({
     access_type: 'offline',
+    prompt: 'consent',
     scope: ['profile', 'email'],
   });
+  console.log(url);
   res.redirect(url);
 });
 
@@ -26,6 +28,9 @@ router.get(
   '/google/callback',
   async (req: Request, res: Response): Promise<void> => {
     const code = req.query.code as string;
+    //http://localhost:3000/google/callback?code=abc123
+    console.log('Request URL:', req.originalUrl);
+    // console.log('code:', code);
 
     if (!code) {
       res.status(400).json({ error: 'Authorization code not provided.' });

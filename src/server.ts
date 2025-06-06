@@ -6,6 +6,7 @@ import { prisma } from './config/db';
 import dotenv from 'dotenv';
 import session from 'express-session';
 import authRoutes from './routes/auth.routes';
+import path from 'path';
 dotenv.config();
 
 const app = express();
@@ -24,6 +25,8 @@ app.use(
   })
 );
 app.use(express.json());
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
 //Database
 prisma
@@ -40,11 +43,19 @@ prisma
 app.use('/auth', authRoutes);
 
 // Home route
-app.get('/', (req, res) => {
-  if ((req.session as any).user) {
-    res.json({ message: 'User logged in', user: (req.session as any).user });
+// app.get('/', (req, res) => {
+//   if ((req.session as any).user) {
+//     res.json({ message: 'User logged in', user: (req.session as any).user });
+//   } else {
+//     res.json({ message: 'User not logged in' });
+//   }
+// });
+app.get('/', (req: Request, res: Response) => {
+  const session = req.session as any;
+  if (session && session.user) {
+    res.render('profile', { user: session.user });
   } else {
-    res.json({ message: 'User not logged in' });
+    res.render('index');
   }
 });
 
